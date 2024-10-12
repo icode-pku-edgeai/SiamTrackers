@@ -13,26 +13,26 @@ from torch.optim.lr_scheduler import _LRScheduler
 from nanotrack.core.config import cfg
 
 
-class LRScheduler(_LRScheduler):
+class LRScheduler(_LRScheduler):#学习率表基类
     def __init__(self, optimizer, last_epoch=-1):
         if 'lr_spaces' not in self.__dict__:
             raise Exception('lr_spaces must be set in "LRSchduler"')
         super(LRScheduler, self).__init__(optimizer, last_epoch)
 
-    def get_cur_lr(self):
+    def get_cur_lr(self):#获取当前lr
         return self.lr_spaces[self.last_epoch]
 
-    def get_lr(self):
+    def get_lr(self):#当前学习率
         epoch = self.last_epoch
         return [self.lr_spaces[epoch] * pg['initial_lr'] / self.start_lr
                 for pg in self.optimizer.param_groups]
 
-    def __repr__(self):
+    def __repr__(self):#用于打印
         return "({}) lr spaces: \n{}".format(self.__class__.__name__,
                                              self.lr_spaces)
 
 
-class LogScheduler(LRScheduler):
+class LogScheduler(LRScheduler):#指数学习率表
     def __init__(self, optimizer, start_lr=0.03, end_lr=5e-4,
                  epochs=50, last_epoch=-1, **kwargs):
         self.start_lr = start_lr
@@ -45,23 +45,23 @@ class LogScheduler(LRScheduler):
         super(LogScheduler, self).__init__(optimizer, last_epoch)
 
 
-class StepScheduler(LRScheduler):
+class StepScheduler(LRScheduler):#渐进学习率表，用的是这个
     def __init__(self, optimizer, start_lr=0.01, end_lr=None,
                  step=10, mult=0.1, epochs=50, last_epoch=-1, **kwargs):
         if end_lr is not None:
             if start_lr is None:
-                start_lr = end_lr / (mult ** (epochs // step))
+                start_lr = end_lr / (mult ** (epochs // step))#只有有终点学习率，就用乘法因子反算起始学习率
             else:  # for warm up policy
-                mult = math.pow(end_lr/start_lr, 1. / (epochs // step))
+                mult = math.pow(end_lr/start_lr, 1. / (epochs // step))#有起点和终点的学习率，就反算乘法因子
         self.start_lr = start_lr
-        self.lr_spaces = self.start_lr * (mult**(np.arange(epochs) // step))
+        self.lr_spaces = self.start_lr * (mult**(np.arange(epochs) // step))#理论学习率更新空间
         self.mult = mult
         self._step = step
 
         super(StepScheduler, self).__init__(optimizer, last_epoch)
 
 
-class MultiStepScheduler(LRScheduler):
+class MultiStepScheduler(LRScheduler):#多步学习率表
     def __init__(self, optimizer, start_lr=0.01, end_lr=None,
                  steps=[10, 20, 30, 40], mult=0.5, epochs=50,
                  last_epoch=-1, **kwargs):
@@ -87,7 +87,7 @@ class MultiStepScheduler(LRScheduler):
         return np.array(lr, dtype=np.float32)
 
 
-class LinearStepScheduler(LRScheduler):
+class LinearStepScheduler(LRScheduler):#线性学习率表
     def __init__(self, optimizer, start_lr=0.01, end_lr=0.005,
                  epochs=50, last_epoch=-1, **kwargs):
         self.start_lr = start_lr
@@ -96,7 +96,7 @@ class LinearStepScheduler(LRScheduler):
         super(LinearStepScheduler, self).__init__(optimizer, last_epoch)
 
 
-class CosStepScheduler(LRScheduler):
+class CosStepScheduler(LRScheduler):#余弦学习率表
     def __init__(self, optimizer, start_lr=0.01, end_lr=0.005,
                  epochs=50, last_epoch=-1, **kwargs):
         self.start_lr = start_lr
@@ -112,7 +112,7 @@ class CosStepScheduler(LRScheduler):
         return lr.astype(np.float32)
 
 
-class WarmUPScheduler(LRScheduler):
+class WarmUPScheduler(LRScheduler):#warmup学习率表
     def __init__(self, optimizer, warmup, normal, epochs=50, last_epoch=-1):
         warmup = warmup.lr_spaces  # [::-1]
         normal = normal.lr_spaces
@@ -123,8 +123,8 @@ class WarmUPScheduler(LRScheduler):
 
 
 LRs = {
-    'log': LogScheduler,
-    'step': StepScheduler,
+    'log': LogScheduler, #之后用log
+    'step': StepScheduler, #warmup用的step
     'multi-step': MultiStepScheduler,
     'linear': LinearStepScheduler,
     'cos': CosStepScheduler}
@@ -136,16 +136,16 @@ def _build_lr_scheduler(optimizer, config, epochs=50, last_epoch=-1):
 
 
 def _build_warm_up_scheduler(optimizer, epochs=50, last_epoch=-1):
-    warmup_epoch = cfg.TRAIN.LR_WARMUP.EPOCH
+    warmup_epoch = cfg.TRAIN.LR_WARMUP.EPOCH#5
     sc1 = _build_lr_scheduler(optimizer, cfg.TRAIN.LR_WARMUP,
                               warmup_epoch, last_epoch)
     sc2 = _build_lr_scheduler(optimizer, cfg.TRAIN.LR,
                               epochs - warmup_epoch, last_epoch)
-    return WarmUPScheduler(optimizer, sc1, sc2, epochs, last_epoch)
+    return WarmUPScheduler(optimizer, sc1, sc2, epochs, last_epoch)#区分warmup前后
 
 
 def build_lr_scheduler(optimizer, epochs=50, last_epoch=-1):
-    if cfg.TRAIN.LR_WARMUP.WARMUP:
+    if cfg.TRAIN.LR_WARMUP.WARMUP:#5
         return _build_warm_up_scheduler(optimizer, epochs, last_epoch)
     else:
         return _build_lr_scheduler(optimizer, cfg.TRAIN.LR,

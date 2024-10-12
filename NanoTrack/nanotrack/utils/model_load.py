@@ -38,14 +38,14 @@ def remove_prefix(state_dict, prefix):
     share common prefix 'module.' '''
     logger.info('remove prefix \'{}\''.format(prefix))
     f = lambda x: x.split(prefix, 1)[-1] if x.startswith(prefix) else x
-    return {f(key): value for key, value in state_dict.items()}
+    return {f(key): value for key, value in state_dict.items()} #字典的键值对中拿掉键中的指定前缀
 
 def load_pretrain(model, pretrained_path):
     logger.info('load pretrained model from {}'.format(pretrained_path))
     
     device = torch.device('cuda' if torch.cuda.is_available()  else 'cpu')
     pretrained_dict = torch.load(pretrained_path,
-        map_location=lambda storage, loc: storage)
+        map_location=lambda storage, loc: storage)#加载预训练权重目录
     
     #device = torch.cuda.current_device()
     # pretrained_dict = torch.load(pretrained_path,
@@ -55,10 +55,10 @@ def load_pretrain(model, pretrained_path):
         pretrained_dict = remove_prefix(pretrained_dict['state_dict'],
                                         'module.')
     else:
-        pretrained_dict = remove_prefix(pretrained_dict, 'module.')
+        pretrained_dict = remove_prefix(pretrained_dict, 'module.')#去掉前缀
 
     try:
-        check_keys(model, pretrained_dict)
+        check_keys(model, pretrained_dict)#目录检查
     except:
         logger.info('[Warning]: using pretrain as features.\
                 Adding "features." as prefix')
@@ -67,8 +67,8 @@ def load_pretrain(model, pretrained_path):
             k = 'features.' + k
             new_dict[k] = v
         pretrained_dict = new_dict
-        check_keys(model, pretrained_dict)
-    model.load_state_dict(pretrained_dict, strict=False)
+        check_keys(model, pretrained_dict)#键前缀加features字符串
+    model.load_state_dict(pretrained_dict, strict=False)#加载预训练权重
     return model
 
 

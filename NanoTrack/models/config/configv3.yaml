@@ -41,7 +41,7 @@ TRACK:
 TRAIN:
     EPOCH: 50  
     START_EPOCH: 0 
-    BATCH_SIZE: 64
+    BATCH_SIZE: 32
     NUM_WORKERS: 8
     BASE_LR: 0.005 
     CLS_WEIGHT: 1.0
@@ -50,7 +50,7 @@ TRAIN:
     BASE_SIZE: 7  
     OUTPUT_SIZE: 15 
     RESUME: '' 
-    PRETRAINED: ''
+    PRETRAINED: './models/pretrained/nanotrackv3.pth'
     SNAPSHOT_DIR: './models/snapshot' 
     
     LR:
@@ -68,12 +68,12 @@ TRAIN:
 
 DATASET: 
     NAMES: 
-    - 'GOT'
-    - 'VID'
-    - 'YOUTUBEBB'
+    # - 'GOT'
+    # - 'VID'
+    # - 'YOUTUBEBB'
     - 'COCO'
-    - 'DET'
-    - 'LASOT'
+    # - 'DET'
+    # - 'LASOT'
 
     VIDEOS_PER_EPOCH: 400000 
 

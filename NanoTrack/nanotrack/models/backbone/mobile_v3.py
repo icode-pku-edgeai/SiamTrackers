@@ -6,7 +6,7 @@ import math
 __all__ = ['mobilenetv3_large', 'mobilenetv3_small']
 
 
-def _make_divisible(v, divisor, min_value=None):
+def _make_divisible(v, divisor, min_value=None):#用来计算通道数
 
     if min_value is None:
         min_value = divisor
@@ -34,10 +34,10 @@ def _make_divisible(v, divisor, min_value=None):
 #         return x * self.sigmoid(x)
 
 #(2) If you want to run faster, before you convert to onnx model, you should use the following operators，since onnx can better optimize them
-class h_sigmoid(nn.Module):
+class h_sigmoid(nn.Module):#
     def __init__(self, inplace=True):
         super(h_sigmoid, self).__init__()
-        self.hard_sigmoid = nn.Hardsigmoid(inplace=inplace)
+        self.hard_sigmoid = nn.Hardsigmoid(inplace=inplace)#simgoid的线性近似版
 
     def forward(self, x):
         return self.hard_sigmoid(x)
@@ -45,7 +45,7 @@ class h_sigmoid(nn.Module):
 class h_swish(nn.Module):
     def __init__(self, inplace=True):
         super(h_swish, self).__init__()
-        self.hard_swish = nn.Hardswish(inplace=True)
+        self.hard_swish = nn.Hardswish(inplace=True)#swish的线性近似版
 
     def forward(self, x):
         return self.hard_swish(x)
@@ -53,15 +53,15 @@ class h_swish(nn.Module):
 class SELayer(nn.Module):
     def __init__(self, channel, reduction=4):
         super(SELayer, self).__init__()
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)#全局平均池化压缩将hwc压缩为1*c
         self.fc = nn.Sequential(
-                nn.Linear(channel, _make_divisible(channel // reduction, 8)),
+                nn.Linear(channel, _make_divisible(channel // reduction, 8)),#fc-relu-fc学特征图相关性
                 nn.ReLU(inplace=True),
                 nn.Linear(_make_divisible(channel // reduction, 8), channel),
-                h_sigmoid()
+                h_sigmoid()   #hsigmoid输出01得到注意力权重
         )
 
-    def forward(self, x):
+    def forward(self, x): #
         b, c, _, _ = x.size()
         y = self.avg_pool(x).view(b, c)
         y = self.fc(y).view(b, c, 1, 1)
@@ -91,19 +91,19 @@ class InvertedResidual(nn.Module):
         self.identity = stride == 1 and inp == oup
 
         if inp == hidden_dim:
-            self.conv = nn.Sequential(
+            self.conv = nn.Sequential( #dwconv-bn-hswish-SE-conv-bn平通道数
                 # dw
                 nn.Conv2d(hidden_dim, hidden_dim, kernel_size, stride, (kernel_size - 1) // 2, groups=hidden_dim, bias=False),
                 nn.BatchNorm2d(hidden_dim),
                 h_swish() if use_hs else nn.ReLU(inplace=True),
                 # Squeeze-and-Excite
-                SELayer(hidden_dim) if use_se else nn.Identity(),
+                SELayer(hidden_dim) if use_se else nn.Identity(), #可选不用SE，就是恒等映射
                 # pw-linear
                 nn.Conv2d(hidden_dim, oup, 1, 1, 0, bias=False),
                 nn.BatchNorm2d(oup),
             )
         else:
-            self.conv = nn.Sequential(
+            self.conv = nn.Sequential( #conv-bn-hswish-dwconv-bn-SE-hswish-conv-bn倒锥，升通道数
                 # pw
                 nn.Conv2d(inp, hidden_dim, 1, 1, 0, bias=False),
                 nn.BatchNorm2d(hidden_dim),
@@ -120,7 +120,7 @@ class InvertedResidual(nn.Module):
             )
 
     def forward(self, x):
-        if self.identity:
+        if self.identity:#带不带残差连接两个版本
             return x + self.conv(x)
         else:
             return self.conv(x)
@@ -133,20 +133,20 @@ class MobileNetV3(nn.Module):
         self.cfgs = cfgs
         assert mode in ['large', 'small']
 
-        # building first layer
+        # building first layer 
         input_channel = _make_divisible(16 * width_mult, 8)
-        layers = [conv_3x3_bn(3, input_channel, 2)]
+        layers = [conv_3x3_bn(3, input_channel, 2)]#首先3*3卷积降维
 
         # building inverted residual blocks
         block = InvertedResidual
-        for k, t, c, use_se, use_hs, s in self.cfgs:
+        for k, t, c, use_se, use_hs, s in self.cfgs:  #k卷积核尺寸、t中间层通道数的膨胀系数、c输出通道数、use_se和use_hs分别为用不用SE注意力和hardswish激活函数、s是步长
             output_channel = _make_divisible(c * width_mult, 8)
             exp_size = _make_divisible(input_channel * t, 8)
-            layers.append(block(input_channel, exp_size, output_channel, k, s, use_se, use_hs))
+            layers.append(block(input_channel, exp_size, output_channel, k, s, use_se, use_hs))#逐层逐次添加倒残差
             input_channel = output_channel
         self.features = nn.Sequential(*layers)
 
-        self._initialize_weights()
+        self._initialize_weights() #初始化权值
 
     def forward(self, x):
         x = self.features(x)
@@ -199,7 +199,7 @@ def mobilenetv3_small_v3(**kwargs):
         [5,    6,  40, 1, 1, 1],
         [5,    3,  48, 1, 1, 1],
         [5,    3,  48, 1, 1, 1], 
-        [5,    6,  96, 1, 1, 1], # s=2 --> s=1 
+        [5,    6,  96, 1, 1, 1], # s=2 --> s=1 加了一层输出96通道
     ] 
 
     return MobileNetV3(cfgs, mode='small', **kwargs)

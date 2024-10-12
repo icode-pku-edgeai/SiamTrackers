@@ -16,7 +16,7 @@ BBox = Corner
 Center = namedtuple('Center', 'x y w h')
 
 
-def corner2center(corner):
+def corner2center(corner):#xyxy转中心点xywh
     """ convert (x1, y1, x2, y2) to (cx, cy, w, h)
     Args:
         conrner: Corner or np.array (4*N)

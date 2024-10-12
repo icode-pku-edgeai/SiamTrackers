@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 
 import torch.nn as nn
 
-class AdjustLayer(nn.Module):
+class AdjustLayer(nn.Module):#单级颈部
     def __init__(self, in_channels, out_channels):
         super(AdjustLayer, self).__init__()
 
@@ -15,7 +15,7 @@ class AdjustLayer(nn.Module):
 
         self.out_channels=out_channels 
 
-        self.downsample = nn.Sequential(
+        self.downsample = nn.Sequential(#降采样，用1*1的卷积把输入输出通道输沟通起来
             nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False),
             nn.BatchNorm2d(out_channels),
             ) 
@@ -31,7 +31,7 @@ class AdjustLayer(nn.Module):
             x = x[:, :, l:r, l:r]
         return x 
 
-class AdjustAllLayer(nn.Module):
+class AdjustAllLayer(nn.Module):#多级颈部
     def __init__(self, in_channels, out_channels):
         super(AdjustAllLayer, self).__init__()
         self.num = len(out_channels)

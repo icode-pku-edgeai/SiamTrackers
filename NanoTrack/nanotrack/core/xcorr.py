@@ -10,7 +10,7 @@ import torch.nn.functional as F
 
 
 def xcorr_slow(x, kernel):
-    """for loop to calculate cross correlation, slow version
+    """for loop to calculate cross correlation, slow version 慢速计算相关性
     """
     batch = x.size()[0]
     out = []
@@ -25,7 +25,7 @@ def xcorr_slow(x, kernel):
     return out 
 
 def xcorr_fast(x, kernel):
-    """group conv2d to calculate cross correlation, fast version
+    """group conv2d to calculate cross correlation, fast version 卷积快速计算相关性
     """
     batch = kernel.size()[0]
     pk = kernel.view(-1, x.size()[1], kernel.size()[2], kernel.size()[3])
@@ -35,7 +35,7 @@ def xcorr_fast(x, kernel):
     return po 
 
 def xcorr_depthwise(x, kernel): 
-    """depthwise cross correlation
+    """depthwise cross correlation 深度卷积相关性
     """
     batch = kernel.size(0)
     channel = kernel.size(1)  
@@ -47,7 +47,7 @@ def xcorr_depthwise(x, kernel):
     return out
 
 def xcorr_pixelwise(x,kernel): #z=kernel 
-    """Pixel-wise correlation (implementation by matrix multiplication)
+    """Pixel-wise correlation (implementation by matrix multiplication) 逐像素计算相关性
     The speed is faster because the computation is vectorized"""
     b, c, h, w = x.size() 
     kernel_mat = kernel.view((b, c, -1)).transpose(1, 2)  # (b, hz * wz, c)
