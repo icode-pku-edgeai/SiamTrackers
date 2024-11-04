@@ -115,7 +115,7 @@ class ExperimentGOT10k(object):
             report_dir = os.path.join(self.report_dir, tracker_names[0])
             if not os.path.exists(report_dir):
                 os.makedirs(report_dir)
-            report_file = os.path.join(report_dir, 'performance.json')
+            report_file = os.path.join(report_dir, 'performance.json')#报告路径，主目录下report文件夹
 
             # visible ratios of all sequences
             seq_names = self.dataset.seq_names
@@ -130,7 +130,7 @@ class ExperimentGOT10k(object):
                     'overall': {},
                     'seq_wise': {}}})
 
-                for s, (_, anno, meta) in enumerate(self.dataset):
+                for s, (_, anno, meta) in enumerate(self.dataset):#一次性加载一个视频的所有内容
                     seq_name = self.dataset.seq_names[s]
                     record_files = glob.glob(os.path.join(
                         self.result_dir, name, seq_name,
@@ -144,8 +144,8 @@ class ExperimentGOT10k(object):
 
                     # calculate and stack all ious
                     bound = ast.literal_eval(meta['resolution'])
-                    seq_ious = [rect_iou(b[1:], anno[1:], bound=bound) for b in boxes]
-                    # only consider valid frames where targets are visible
+                    seq_ious = [rect_iou(b[1:], anno[1:], bound=bound) for b in boxes]#检测框和标签框算iou，除开第一帧
+                    # only consider valid frames where targets are visible 仅考虑目标可见的有效帧
                     seq_ious = [t[covers[seq_name] > 0] for t in seq_ious]
                     seq_ious = np.concatenate(seq_ious)
                     ious[seq_name] = seq_ious
@@ -262,8 +262,8 @@ class ExperimentGOT10k(object):
 
     def _evaluate(self, ious, times):
         # AO, SR and tracking speed
-        ao = np.mean(ious)
-        sr = np.mean(ious > 0.5)
+        ao = np.mean(ious)#iou均值就是平均重叠率
+        sr = np.mean(ious > 0.5)#大于0.5的iou均值就是成功率
         if len(times) > 0:
             # times has to be an array of positive values
             speed_fps = np.mean(1. / times)

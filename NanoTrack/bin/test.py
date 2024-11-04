@@ -65,8 +65,10 @@ def main():
     
     cfg.merge_from_file(args.config) 
 
-    dataset_root = os.path.join('./datasets', args.dataset) 
-                  
+    # dataset_root = os.path.join('./datasets', args.dataset) 
+    dataset_root = os.path.join('C:\\Users\\li\\Desktop\\repo\\track\\SiamTrackers-master\\NanoTrack\\datasets', args.dataset) #Windows上要指定绝对路径
+
+
     params = [0.0,0.0,0.0]
     
     params[0] =cfg.TRACK.LR 
@@ -75,16 +77,16 @@ def main():
 
     params_name = args.snapshot.split('/')[-1] + ' '+ args.dataset + '  lr-' + str(params[0]) + '  pk-' + '_' + str(params[1]) + '  win-' + '_' + str(params[2])
     
-    # create model 
+    # create model 模型初始化
     model = ModelBuilder() 
 
-    # load model 
+    # load model 权重加载
     model = load_pretrain(model, args.snapshot).cuda().eval()
     
-    # build tracker 
+    # build tracker 跟踪器初始化
     tracker = build_tracker(model)
     
-    # create dataset 
+    # create dataset 目标数据集初始化
     dataset = DatasetFactory.create_dataset(name=args.dataset,  
                                             dataset_root=dataset_root,
                                             load_img=False)  
@@ -166,7 +168,7 @@ def main():
         
     else:
     # OPE tracking
-        for v_idx, video in tqdm(enumerate(dataset)): 
+        for v_idx, video in tqdm(enumerate(dataset)): #遍历视频
             if args.video != '':
                 # test one special video
                 if video.name != args.video:
@@ -175,12 +177,12 @@ def main():
             pred_bboxes = []
             scores = []
             track_times = []
-            for idx, (img, gt_bbox) in enumerate(video):
+            for idx, (img, gt_bbox) in enumerate(video): #遍历图片
                 tic = cv2.getTickCount()
-                if idx == 0:
+                if idx == 0:#首帧取真实框作为目标框
                     cx, cy, w, h = get_axis_aligned_bbox(np.array(gt_bbox))
                     gt_bbox_ = [cx-(w-1)/2, cy-(h-1)/2, w, h] #[topx,topy,w,h]
-                    tracker.init(img, gt_bbox_)
+                    tracker.init(img, gt_bbox_)#执行首帧初始化
                     pred_bbox = gt_bbox_
                     scores.append(None)
                     if 'VOT2018-LT' == args.dataset: 
@@ -188,7 +190,7 @@ def main():
                     else: 
                         pred_bboxes.append(pred_bbox)
                 else: 
-                    outputs = tracker.track(img)
+                    outputs = tracker.track(img)#其他帧执行跟踪
                     pred_bbox = outputs['bbox']
                     pred_bboxes.append(pred_bbox)
                     #scores.append(outputs['best_score'])  
@@ -236,12 +238,12 @@ def main():
                 result_path = os.path.join(video_path, '{}_001.txt'.format(video.name))
                 with open(result_path, 'w') as f:
                     for x in pred_bboxes:
-                        f.write(','.join([str(i) for i in x])+'\n')
+                        f.write(','.join([str(i) for i in x])+'\n')#测试bbox结果写入
                 result_path = os.path.join(video_path,
                         '{}_time.txt'.format(video.name))
                 with open(result_path, 'w') as f:
                     for x in track_times:
-                        f.write("{:.6f}\n".format(x))
+                        f.write("{:.6f}\n".format(x))#测试时间写入
             else:
                 model_path = os.path.join(args.save_path, args.dataset, args.tracker_name)
                 if not os.path.isdir(model_path):

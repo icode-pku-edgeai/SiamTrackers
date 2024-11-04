@@ -22,7 +22,7 @@ warnings.filterwarnings('ignore')
 from got10k.experiments import ExperimentGOT10k
 
 def eval(args):
-    tracker_dir = os.path.join(args.tracker_path, args.dataset)
+    tracker_dir = os.path.join(args.tracker_path, args.dataset)#跟踪算法输出目录
     trackers = glob(os.path.join(args.tracker_path,
                                  args.dataset,
                                  args.tracker_name+'*'))
@@ -34,7 +34,7 @@ def eval(args):
     
     root = './datasets'
 
-    root = os.path.join(root, args.dataset)
+    root = os.path.join(root, args.dataset)#数据集目录
     if 'OTB' in args.dataset:
         dataset = OTBDataset(args.dataset, root)
         dataset.set_tracker(tracker_dir, trackers)
@@ -100,8 +100,8 @@ def eval(args):
                 show_video_level=args.show_video_level)
     
     elif 'GOT-10k' in args.dataset:
-        root_dir = os.path.abspath('datasets/GOT-10k') 
-        e = ExperimentGOT10k(root_dir) 
+        root_dir = os.path.abspath('datasets/GOT-10k') #当前目录+指定路径（适应不同操作系统）
+        e = ExperimentGOT10k(root_dir) #主要测试代码
         ao, sr, speed=e.report([args.tracker_name])
         ss='ao:%.3f --sr:%.3f -speed:%.3f' % (float(ao),float(sr),float(speed))
         print(ss)
@@ -200,22 +200,22 @@ def eval(args):
 # --tracker_name  'checkpoint*' 
 
 if __name__ == '__main__':
+    #eval仅对比跟踪算法输出的txt和label的差异，与算法本身无关
+    tracker_name='nanotrack'#仅用于输出的二级文件夹的名称
     
-    tracker_name='nanotrack'
-    
-    dataset='DTB70'
+    dataset='GOT-10k'#仅用于输出的一级文件夹的名称
 
     parser = argparse.ArgumentParser(description='tracking evaluation')
     parser.add_argument('--tracker_path', '-p', default='./results', type=str,
-                        help='tracker result path')
+                        help='tracker result path')#默认输出路径results
     parser.add_argument('--dataset', '-d', default=dataset, type=str,
-                        help='dataset name')
+                        help='dataset name')#默认输出文件夹名称
     parser.add_argument('--num', '-n', default=4, type=int,
-                        help='number of thread to eval')
+                        help='number of thread to eval')#线程数
     parser.add_argument('--tracker_name', '-t', default=tracker_name,
-                        type=str, help='tracker name')
+                        type=str, help='tracker name')#默认输出文件夹名称
     parser.add_argument('--show_video_level', '-s', dest='show_video_level',
-                        action='store_true')
+                        action='store_true')#是否展示视频
     parser.set_defaults(show_video_level=False)
 
     args = parser.parse_args()

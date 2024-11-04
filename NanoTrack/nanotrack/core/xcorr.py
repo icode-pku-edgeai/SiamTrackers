@@ -47,7 +47,7 @@ def xcorr_depthwise(x, kernel):
     return out
 
 def xcorr_pixelwise(x,kernel): #z=kernel 
-    """Pixel-wise correlation (implementation by matrix multiplication) 逐像素计算相关性
+    """Pixel-wise correlation (implementation by matrix multiplication)逐像素计算相关性
     The speed is faster because the computation is vectorized"""
     b, c, h, w = x.size() 
     kernel_mat = kernel.view((b, c, -1)).transpose(1, 2)  # (b, hz * wz, c)
